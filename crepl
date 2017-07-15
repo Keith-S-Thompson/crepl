@@ -10,22 +10,33 @@ my @includes = qw(<stdio.h>);
 
 my $program = "/tmp/crepl-$$";
 my $source_file = "$program.c";
+my $use_math_lib = 0;
 
 my $term = new Term::ReadLine 'crepl';
 $term->ornaments(0);
-while (my $line = $term->readline('{} ')) {
-    if ($line =~ /^\s*include\s*$/) {
+while (defined (my $line = $term->readline('{} '))) {
+    if ($line =~ /^\s*(h|help|\?)\s*$/) {
+        help();
+    }
+    elsif ($line =~ /^\s*include\s*$/) {
         show_includes();
     }
     elsif ($line =~ /^\s*include\b\s*(.*)$/) {
         add_include($1);
     }
-    if ($line =~ /^\s*source\s*$/) {
-        print head(), "    /* YOUR LINE HERE */\n", tail();
-    }
     else {
-        create_source($source_file, $line);
-        my $result = system qw(gcc -std=c11 -pedantic-errors), $source_file, '-o', $program;
+        my $print_source = 0;
+        if ($line =~ /^\s*p\b\s*(.*)$/) {
+            $print_source = 1;
+            $line = $1;
+        }
+        if ($line =~ /^\s*([df])\b\s*(.*)$/) {
+            my($format, $expr) = ($1, $2);
+            $line = qq{printf("%$format\\n", $expr)};
+        }
+        create_source($source_file, $line, $print_source);
+        my @lm = $use_math_lib ? qw(-lm) : ();
+        my $result = system qw(gcc -std=c11 -pedantic-errors), $source_file, '-o', $program, @lm;
         if ($result == 0) {
             system $program;
         }
@@ -54,7 +65,7 @@ sub head {
 
 # Returns the tail of the generated C source file
 sub tail {
-    return "}\n";
+    return "    ;\n}\n";
 }
 
 sub show_includes {
@@ -66,16 +77,34 @@ sub add_include {
     if ($include !~ /^<.*>$/ and $include !~ /^".*"$/) {
         $include = "<$include>";
     }
+    if ($include eq '<math.h>' or $include eq '<tgmath.h>') {
+        $use_math_lib = 1;
+    }
     push @includes, $include;
 }
 
 sub create_source {
-    my($source_file, $line) = @_;
+    my($source_file, $line, $print_source) = @_;
     open my $SOURCE, '>', $source_file;
     print $SOURCE head(), "    $line\n", tail();
+    if ($print_source) {
+        print head(), "    $line\n", tail();
+    }
     close $SOURCE;
 
     # say ">>> $source_file :";
     # system 'cat', $source_file;
     # say ">>> __END__";
+}
+
+sub help {
+    print <<"EOF";
+Enter a C statement
+Other commands:
+include        List current include list
+include HEADER Add a header to the include list
+p statement    Print the source file before compiling it
+d expr         Print expr with "%d\n"
+f expr         Print expr with "%f\n"
+EOF
 }
