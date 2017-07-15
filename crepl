@@ -1,0 +1,81 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use feature 'say';
+
+use Term::ReadLine ();
+
+my @includes = qw(<stdio.h>);
+
+my $program = "/tmp/crepl-$$";
+my $source_file = "$program.c";
+
+my $term = new Term::ReadLine 'crepl';
+$term->ornaments(0);
+while (my $line = $term->readline('{} ')) {
+    if ($line =~ /^\s*include\s*$/) {
+        show_includes();
+    }
+    elsif ($line =~ /^\s*include\b\s*(.*)$/) {
+        add_include($1);
+    }
+    if ($line =~ /^\s*source\s*$/) {
+        print head(), "    /* YOUR LINE HERE */\n", tail();
+    }
+    else {
+        create_source($source_file, $line);
+        my $result = system qw(gcc -std=c11 -pedantic-errors), $source_file, '-o', $program;
+        if ($result == 0) {
+            system $program;
+        }
+        else {
+            say "Compilation failed";
+        }
+    }
+}
+
+########################################################################
+
+# Returns a (possibly multi-line) string containing #include directives.
+# The string is terminated by a newline.
+sub includes {
+    my $result = '';
+    foreach my $include (@includes) {
+       $result .=  "#include $include\n";
+    }
+    return $result;
+}
+
+# Returns the head of the generated C source file
+sub head {
+    return includes() . "int main(void) {\n";
+}
+
+# Returns the tail of the generated C source file
+sub tail {
+    return "}\n";
+}
+
+sub show_includes {
+    print includes();
+}
+
+sub add_include {
+    my($include) = @_;
+    if ($include !~ /^<.*>$/ and $include !~ /^".*"$/) {
+        $include = "<$include>";
+    }
+    push @includes, $include;
+}
+
+sub create_source {
+    my($source_file, $line) = @_;
+    open my $SOURCE, '>', $source_file;
+    print $SOURCE head(), "    $line\n", tail();
+    close $SOURCE;
+
+    # say ">>> $source_file :";
+    # system 'cat', $source_file;
+    # say ">>> __END__";
+}
