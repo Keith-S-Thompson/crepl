@@ -104,7 +104,7 @@ Other commands:
 include        List current include list
 include HEADER Add a header to the include list
 p statement    Print the source file before compiling it
-d expr         Print expr with "%d\n"
-f expr         Print expr with "%f\n"
+d expr         Print expr with "%d\\n"
+f expr         Print expr with "%f\\n"
 EOF
 }
