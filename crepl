@@ -25,6 +25,7 @@ while (defined (my $line = $term->readline('{} '))) {
         add_include($1);
     }
     else {
+        my @files = ();
         my $print_source = 0;
         if ($line =~ /^\s*p\b\s*(.*)$/) {
             $print_source = 1;
@@ -35,14 +36,17 @@ while (defined (my $line = $term->readline('{} '))) {
             $line = qq{printf("%$format\\n", $expr)};
         }
         create_source($source_file, $line, $print_source);
+        push @files, $source_file;
         my @lm = $use_math_lib ? qw(-lm) : ();
         my $result = system qw(gcc -std=c11 -pedantic-errors), $source_file, '-o', $program, @lm;
         if ($result == 0) {
+            push @files, $program;
             system $program;
         }
         else {
             say "Compilation failed";
         }
+        unlink @files if @files;
     }
 }
 
