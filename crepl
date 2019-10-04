@@ -5,10 +5,11 @@ use warnings;
 use feature 'say';
 
 use Term::ReadLine ();
+use File::Temp ();
 
 my @includes = qw(<stdio.h>);
 
-my $program = "/tmp/crepl-$$";
+my (undef, $program) = File::Temp::tempfile("creplXXXXXX", TMPDIR => 1);
 my $source_file = "$program.c";
 my $use_math_lib = 0;
 
