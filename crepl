@@ -11,6 +11,9 @@ my @includes = qw(<stdio.h>);
 
 my (undef, $program) = File::Temp::tempfile("creplXXXXXX", TMPDIR => 1);
 my $source_file = "$program.c";
+if ($^O eq 'cygwin') {
+    $program .= '.exe';
+}
 my $use_math_lib = 0;
 
 my $term = new Term::ReadLine 'crepl';
