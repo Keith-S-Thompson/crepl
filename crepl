@@ -46,6 +46,7 @@ while (defined (my $line = $term->readline('{} '))) {
         if ($result == 0) {
             push @files, $program;
             system $program;
+            # TODO: Show exit status
         }
         else {
             say "Compilation failed";
@@ -53,6 +54,8 @@ while (defined (my $line = $term->readline('{} '))) {
         unlink @files if @files;
     }
 }
+
+say '';
 
 ########################################################################
 
