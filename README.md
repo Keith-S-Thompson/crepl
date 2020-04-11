@@ -35,7 +35,7 @@ Type `include` by itself to list the current include list.
 
 Multiple input lines are not combined; the body of the C program
 is just the one line you entered.  Of course you can enter multiple
-statements on a single line.  No state is kept from line one to the
+statements on a single line.  No state is kept from one line to the
 next, other than the list of included headers.
 
 The C program is compiled with `gcc -std=c11 -pedantic-errors`.
