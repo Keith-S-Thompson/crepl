@@ -16,11 +16,16 @@ if ($^O eq 'cygwin') {
 }
 my $use_math_lib = 0;
 
+say "Type 'h' or '?' for help";
+
 my $term = new Term::ReadLine 'crepl';
 $term->ornaments(0);
 while (defined (my $line = $term->readline('{} '))) {
     if ($line =~ /^\s*(h|help|\?)\s*$/) {
         help();
+    }
+    elsif ($line =~ /^\s*q\s*$/) {
+        exit;
     }
     elsif ($line =~ /^\s*include\s*$/) {
         show_includes();
@@ -117,5 +122,7 @@ include HEADER Add a header to the include list
 p statement    Print the source file before compiling it
 d expr         Print expr with "%d\\n"
 f expr         Print expr with "%f\\n"
+h, ?           Print this help message
+q              Quit
 EOF
 }
