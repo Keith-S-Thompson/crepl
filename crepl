@@ -6,11 +6,19 @@ use feature 'say';
 
 use Term::ReadLine ();
 use File::Temp ();
+use File::Spec ();
 
-my @includes = qw(<stdio.h>);
+my $program_name = (File::Spec->splitpath($0))[2];
+
+my $language = 'C';
+if ($program_name eq 'c++repl' or $program_name eq 'cpprepl') {
+    $language = 'C++';
+}
+
+my @includes = $language eq 'C' ? qw(<stdio.h>) : qw(<iostream>);
 
 my (undef, $program) = File::Temp::tempfile("creplXXXXXX", TMPDIR => 1);
-my $source_file = "$program.c";
+my $source_file = $language eq 'C' ? "$program.c" : "$program.cpp";
 if ($^O eq 'cygwin') {
     $program .= '.exe';
 }
@@ -18,7 +26,7 @@ my $use_math_lib = 0;
 
 say "Type 'h' or '?' for help";
 
-my $term = new Term::ReadLine 'crepl';
+my $term = new Term::ReadLine($program_name);
 $term->ornaments(0);
 while (defined (my $line = $term->readline('{} '))) {
     if ($line =~ /^\s*(h|help|\?)\s*$/) {
@@ -46,8 +54,9 @@ while (defined (my $line = $term->readline('{} '))) {
         }
         create_source($source_file, $line, $print_source);
         push @files, $source_file;
+        my @gcc = $language eq 'C' ? qw(gcc -std=c11) : qw(g++ -std=c++11);
         my @lm = $use_math_lib ? qw(-lm) : ();
-        my $result = system qw(gcc -std=c11 -pedantic-errors), $source_file, '-o', $program, @lm;
+        my $result = system @gcc, '-pedantic-errors', $source_file, '-o', $program, @lm;
         if ($result == 0) {
             push @files, $program;
             system $program;
@@ -76,7 +85,8 @@ sub includes {
 
 # Returns the head of the generated C source file
 sub head {
-    return includes() . "int main(void) {\n";
+    my $main = $language eq 'C' ? 'int main(void)' : 'int main()';
+    return includes() . "$main {\n";
 }
 
 # Returns the tail of the generated C source file
@@ -93,7 +103,7 @@ sub add_include {
     if ($include !~ /^<.*>$/ and $include !~ /^".*"$/) {
         $include = "<$include>";
     }
-    if ($include eq '<math.h>' or $include eq '<tgmath.h>') {
+    if ($include eq '<math.h>' or $include eq '<cmath>' or $include eq '<tgmath.h>') {
         $use_math_lib = 1;
     }
     push @includes, $include;
