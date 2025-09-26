@@ -26,46 +26,19 @@ my $use_math_lib = 0;
 
 say "Type 'h' or '?' for help";
 
-my $term = new Term::ReadLine($program_name);
-$term->ornaments(0);
-while (defined (my $line = $term->readline('{} '))) {
-    if ($line =~ /^\s*(h|help|\?)\s*$/) {
-        help();
+if (Term::ReadLine->ReadLine() =~ /Stub/) {
+    # Don't bother using the stub implementation
+    print '{} ';
+    while (<<>>) {
+        process_line($_);
+        print '{} ';
     }
-    elsif ($line =~ /^\s*q\s*$/) {
-        exit;
-    }
-    elsif ($line =~ /^\s*include\s*$/) {
-        show_includes();
-    }
-    elsif ($line =~ /^\s*include\b\s*(.*)$/) {
-        add_include($1);
-    }
-    else {
-        my @files = ();
-        my $print_source = 0;
-        if ($line =~ /^\s*p\b\s*(.*)$/) {
-            $print_source = 1;
-            $line = $1;
-        }
-        if ($line =~ /^\s*([df])\b\s*(.*)$/) {
-            my($format, $expr) = ($1, $2);
-            $line = qq{printf("%$format\\n", $expr)};
-        }
-        create_source($source_file, $line, $print_source);
-        push @files, $source_file;
-        my @gcc = $language eq 'C' ? qw(gcc -std=c11) : qw(g++ -std=c++11);
-        my @lm = $use_math_lib ? qw(-lm) : ();
-        my $result = system @gcc, '-pedantic-errors', $source_file, '-o', $program, @lm;
-        if ($result == 0) {
-            push @files, $program;
-            system $program;
-            # TODO: Show exit status
-        }
-        else {
-            say "Compilation failed";
-        }
-        unlink @files if @files;
+}
+else {
+    my $term = new Term::ReadLine($program_name);
+    $term->ornaments(0);
+    while (defined (my $line = $term->readline('{} '))) {
+        process_line($line);
     }
 }
 
@@ -121,6 +94,48 @@ sub create_source {
     # say ">>> $source_file :";
     # system 'cat', $source_file;
     # say ">>> __END__";
+}
+
+sub process_line {
+    my($line) = @_;
+    if ($line =~ /^\s*(h|help|\?)\s*$/) {
+        help();
+    }
+    elsif ($line =~ /^\s*q\s*$/) {
+        exit;
+    }
+    elsif ($line =~ /^\s*include\s*$/) {
+        show_includes();
+    }
+    elsif ($line =~ /^\s*include\b\s*(.*)$/) {
+        add_include($1);
+    }
+    else {
+        my @files = ();
+        my $print_source = 0;
+        if ($line =~ /^\s*p\b\s*(.*)$/) {
+            $print_source = 1;
+            $line = $1;
+        }
+        if ($line =~ /^\s*([df])\b\s*(.*)$/) {
+            my($format, $expr) = ($1, $2);
+            $line = qq{printf("%$format\\n", $expr)};
+        }
+        create_source($source_file, $line, $print_source);
+        push @files, $source_file;
+        my @gcc = $language eq 'C' ? qw(gcc -std=c11) : qw(g++ -std=c++11);
+        my @lm = $use_math_lib ? qw(-lm) : ();
+        my $result = system @gcc, '-pedantic-errors', $source_file, '-o', $program, @lm;
+        if ($result == 0) {
+            push @files, $program;
+            system $program;
+            # TODO: Show exit status
+        }
+        else {
+            say "Compilation failed";
+        }
+        unlink @files if @files;
+    }
 }
 
 sub help {

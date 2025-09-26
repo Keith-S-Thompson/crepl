@@ -33,7 +33,10 @@ The added `;` lets you omit the trailing semicolon on the entered statement.
 
 `crepl` uses Perl's
 [`Term::ReadLine`](https://metacpan.org/pod/Term::ReadLine) module,
-so it supports line editing.
+so it supports line editing -- but only if `Term::Readline::Gnu`
+or `Term::Readline::Perl` is installed.  If not, `Term::ReadLine` falls
+back to a `Stub` implementation, which is not particularly useful (and
+can trigger a bug in older Perls).
 
 By default, the C program has `#include <stdio.h>` at the top
 (`#include <iostream>` for C++).  More headers can be added to the
