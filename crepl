@@ -17,6 +17,8 @@ if ($program_name eq 'c++repl' or $program_name eq 'cpprepl') {
 
 my @includes = $language eq 'C' ? qw(<stdio.h>) : qw(<iostream>);
 
+my @cc = ();
+
 my (undef, $program) = File::Temp::tempfile("creplXXXXXX", TMPDIR => 1);
 my $source_file = $language eq 'C' ? "$program.c" : "$program.cpp";
 if ($^O eq 'cygwin') {
@@ -110,6 +112,9 @@ sub process_line {
     elsif ($line =~ /^\s*include\b\s*(.*)$/) {
         add_include($1);
     }
+    elsif ($line =~ /^\s*c\b\s*(.*)$/) {
+        @cc = split /\s+/, $line;
+    }
     else {
         my @files = ();
         my $print_source = 0;
@@ -123,9 +128,12 @@ sub process_line {
         }
         create_source($source_file, $line, $print_source);
         push @files, $source_file;
-        my @gcc = $language eq 'C' ? qw(gcc -std=c11) : qw(g++ -std=c++11);
+        if (not @cc) {
+            @cc = $language eq 'C' ? qw(gcc -std=c17) : qw(g++ -std=c++17);
+            push @cc, '-pedantic-errors';
+        }
         my @lm = $use_math_lib ? qw(-lm) : ();
-        my $result = system @gcc, '-pedantic-errors', $source_file, '-o', $program, @lm;
+        my $result = system @cc, $source_file, '-o', $program, @lm;
         if ($result == 0) {
             push @files, $program;
             system $program;
@@ -147,6 +155,7 @@ include HEADER Add a header to the include list
 p statement    Print the source file before compiling it
 d expr         Print expr with "%d\\n"
 f expr         Print expr with "%f\\n"
+c compiler     Specify a compiler command line
 h, ?           Print this help message
 q              Quit
 EOF

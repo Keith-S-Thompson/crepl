@@ -54,5 +54,15 @@ is just the one line you entered.  Of course you can enter multiple
 statements on a single line.  No state is kept from one line to the
 next, other than the list of included headers.
 
-A C program is compiled with `gcc -std=c11 -pedantic-errors`.  
-A C++ program is compiled with `gcc -std=c++11 -pedantic-errors`.
+The default compiler command line is
+```
+gcc -std=c17 -pedantic-errors
+```
+for C,
+```
+g++ -std=c++17 -pedantic-errors
+```
+
+The `c` command can be used to change the compiler command line.
+It's assumed that `... filename.c -o filename [-lm]` is valid for
+the given compiler.
