@@ -130,6 +130,10 @@ sub process_line {
             my($expr) = ($1);
             $line = qq{printf("%#x\\n", $expr)};
         }
+        elsif ($line =~ /^\s*z\b\s*(.*)$/) {
+            my($expr) = ($1);
+            $line = qq{printf("%zu\\n", $expr)};
+        }
         create_source($source_file, $line, $print_source);
         push @files, $source_file;
         if (not @cc) {
@@ -159,6 +163,7 @@ include HEADER Add a header to the include list
 p statement    Print the source file before compiling it
 d expr         Print expr with "%d\\n"
 x expr         Print expr with "%#x\\n"
+z expr         Print expr with "%zu\\n"
 f expr         Print expr with "%f\\n"
 c compiler     Specify a compiler command line
 h, ?           Print this help message
