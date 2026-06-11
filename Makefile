@@ -14,4 +14,4 @@ install: prefix_is_defined
 	mkdir -p $(PREFIX)/bin
 	$(INSTALL_FILE) README.md $(PREFIX)
 	$(INSTALL_PROGRAM) crepl $(PREFIX)/bin
-	ln -sf $(PREFIX)/bin/crepl $(PREFIX)/bin/c++repl 
+	ln -sf crepl $(PREFIX)/bin/c++repl
