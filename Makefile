@@ -1,3 +1,6 @@
+all:
+	@echo 'Nothing to build, use `make PREFIX=... install`'
+
 INSTALL_FILE    = install -p -m 644
 INSTALL_PROGRAM = install -p -m 755
 
